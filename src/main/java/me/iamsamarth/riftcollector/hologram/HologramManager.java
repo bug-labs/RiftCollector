@@ -2,6 +2,7 @@ package me.iamsamarth.riftcollector.hologram;
 
 import me.iamsamarth.riftcollector.ability.Ability;
 import me.iamsamarth.riftcollector.collector.Collector;
+import me.iamsamarth.riftcollector.collector.CollectorName;
 import me.iamsamarth.riftcollector.collector.CollectorService;
 import me.iamsamarth.riftcollector.config.PluginConfig;
 import me.iamsamarth.riftcollector.hook.EconomyService;
@@ -13,6 +14,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.TextDisplay;
@@ -41,18 +43,21 @@ public final class HologramManager {
 
     private Upgrades upgrades;
     private PluginConfig.Holograms settings;
+    private PluginConfig.Names names;
 
     public HologramManager(CollectorService collectors, Lang lang, Upgrades upgrades, EconomyService economy,
-                           PluginConfig.Holograms settings) {
+                           PluginConfig.Holograms settings, PluginConfig.Names names) {
         this.collectors = collectors;
         this.lang = lang;
         this.upgrades = upgrades;
         this.economy = economy;
         this.settings = settings;
+        this.names = names;
     }
 
-    public void settings(PluginConfig.Holograms settings, Upgrades upgrades) {
+    public void settings(PluginConfig.Holograms settings, PluginConfig.Names names, Upgrades upgrades) {
         this.settings = settings;
+        this.names = names;
         this.upgrades = upgrades;
     }
 
@@ -157,13 +162,16 @@ public final class HologramManager {
 
     private Component text(Collector collector) {
         TagResolver placeholders = placeholders(collector);
+        // A hologram hangs in the world rather than belonging to a viewer, so another plugin's
+        // placeholders are filled in for the owner, whose collector it is.
+        OfflinePlayer owner = collector.owner() == null ? null : Bukkit.getOfflinePlayer(collector.owner());
         Component text = Component.empty();
         List<String> lines = settings.lines();
         for (int index = 0; index < lines.size(); index++) {
             if (index > 0) {
                 text = text.append(Component.newline());
             }
-            text = text.append(lang.parse(lines.get(index), placeholders));
+            text = text.append(lang.parse(owner, lines.get(index), placeholders));
         }
         return text;
     }
@@ -171,6 +179,7 @@ public final class HologramManager {
     private TagResolver placeholders(Collector collector) {
         @Nullable String owner = collector.ownerName();
         return TagResolver.resolver(
+                Placeholder.component("name", CollectorName.of(collector, lang, names)),
                 owner == null
                         ? Placeholder.component("owner", lang.get("collector.unknown-owner"))
                         : Placeholder.unparsed("owner", owner),

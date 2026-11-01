@@ -24,7 +24,8 @@ import java.util.Map;
  */
 public final class UpgradesMenu extends Menu {
 
-    private record IconSet(String normal, String maxed, String locked) {
+    /** The item drawn for one upgrade in each of the states it can be in. */
+    private record IconSet(String normal, String page, String maxed, String locked) {
     }
 
     private final Upgrades upgrades;
@@ -55,6 +56,7 @@ public final class UpgradesMenu extends Menu {
             slots.put(slot, type);
             icons.put(type, new IconSet(
                     entry.getString("icon"),
+                    entry.getString("page-icon", entry.getString("icon")),
                     entry.getString("maxed-icon", entry.getString("icon")),
                     entry.getString("locked-icon", entry.getString("icon"))));
         }
@@ -118,12 +120,25 @@ public final class UpgradesMenu extends Menu {
 
             boolean allowed = viewer == null || upgrades.hasPermission(type, levelOf(type) + 1, viewer);
             boolean maxed = maxed(type);
-            String character = maxed ? set.maxed() : allowed ? set.normal() : set.locked();
-            MenuIcon icon = layout.icon(character);
+            MenuIcon icon = layout.icon(iconNameFor(type, set, allowed, maxed));
             if (icon != null) {
-                inventory.setItem(entry.getKey(), icon.render(context, lang, placeholdersFor(type, allowed, maxed)));
+                inventory.setItem(entry.getKey(),
+                        icon.render(context, lang, viewer, placeholdersFor(type, allowed, maxed)));
             }
         }
+    }
+
+    /** Storage is sold either by the slot or by the page, and the two read nothing alike. */
+    private String iconNameFor(UpgradeType type, IconSet set, boolean allowed, boolean maxed) {
+        if (maxed) {
+            return set.maxed();
+        }
+        if (!allowed) {
+            return set.locked();
+        }
+        return type == UpgradeType.SLOTS && upgrades.slotModel().mode() == Upgrades.SlotMode.PAGE
+                ? set.page()
+                : set.normal();
     }
 
     private TagResolver placeholdersFor(UpgradeType type, boolean allowed, boolean maxed) {
@@ -139,7 +154,8 @@ public final class UpgradesMenu extends Menu {
                 Placeholder.unparsed("value", number(upgrades.value(type, level))),
                 Placeholder.unparsed("next-value", next == null ? "-" : number(next.value())),
                 Placeholder.unparsed("cost", next == null ? "-" : services.economy().format(next.cost())),
-                Placeholder.component("reason", reason(type, allowed, maxed)));
+                Placeholder.component("reason", reason(type, allowed, maxed)),
+                placeholders());
     }
 
     private TagResolver slotPlaceholders(boolean allowed, boolean maxed) {
@@ -160,7 +176,8 @@ public final class UpgradesMenu extends Menu {
                 Placeholder.unparsed("cost-one", cost(1)),
                 Placeholder.unparsed("cost-bulk", cost(bulk)),
                 Placeholder.unparsed("cost-page", cost(pageSize)),
-                Placeholder.component("reason", reason(type, allowed, maxed)));
+                Placeholder.component("reason", reason(type, allowed, maxed)),
+                placeholders());
     }
 
     private String cost(int slots) {
@@ -210,6 +227,11 @@ public final class UpgradesMenu extends Menu {
 
     private String number(long value) {
         return String.format(Locale.ROOT, "%,d", value);
+    }
+
+    @Override
+    protected void reopen(Player player) {
+        menus.openUpgrades(player, collector);
     }
 
     @Override

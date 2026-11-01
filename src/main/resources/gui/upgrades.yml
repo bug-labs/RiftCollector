@@ -1,8 +1,10 @@
 # Upgrades menu. Same options as gui/collector.yml, with one extra section: 'upgrades' says
 # which slot each upgrade sits in and which item to draw for it.
 #
-# Placeholders in an upgrade's item:
-#   <upgrade> <level> <max-level> <value> <next-value> <cost>
+# Placeholders in an upgrade's item, on top of the ones every menu has:
+#   <upgrade> <level> <max-level> <value> <next-value> <cost> <reason>
+# The storage upgrade has its own set instead:
+#   <level> <max-level> <pages> <page-size> <bulk> <cost-one> <cost-bulk> <cost-page>
 
 title: "<lang:gui.upgrades.title>"
 rows: 5
@@ -19,6 +21,9 @@ layout:
 # icon        item shown while the upgrade can still be bought
 # maxed-icon  item shown once it is at its last level
 # locked-icon item shown when the player may not buy it
+# page-icon   storage only: used instead of 'icon' when upgrades.slots.mode is PAGE, where a
+#             whole page is bought at a time and the per-slot clicks do not apply
+# Each of those names an entry under 'items' below.
 upgrades:
   pickup-speed:
     slot: 11
@@ -33,6 +38,7 @@ upgrades:
   slots:
     slot: 14
     icon: S
+    page-icon: SP
     maxed-icon: SM
     locked-icon: L
   slot-capacity:
@@ -49,21 +55,30 @@ items:
   B:
     material: ARROW
     name: "<lang:gui.back.name>"
+    lore:
+      - "<lang:gui.back.lore>"
     action: back
 
   A:
     material: SUGAR
     name: "<lang:upgrade.pickup-speed.name>"
     lore:
+      - "<lang:gui.upgrades.pickup-speed.lore-1>"
+      - "<lang:gui.upgrades.pickup-speed.lore-2>"
+      - ""
       - "<lang:gui.upgrades.level>"
       - "<lang:gui.upgrades.current>"
       - "<lang:gui.upgrades.next>"
+      - ""
       - "<lang:gui.upgrades.buy>"
   AM:
     material: SUGAR
     glow: true
     name: "<lang:upgrade.pickup-speed.name>"
     lore:
+      - "<lang:gui.upgrades.pickup-speed.lore-1>"
+      - "<lang:gui.upgrades.pickup-speed.lore-2>"
+      - ""
       - "<lang:gui.upgrades.level>"
       - "<lang:gui.upgrades.current>"
       - "<lang:gui.upgrades.maxed>"
@@ -72,15 +87,22 @@ items:
     material: SPYGLASS
     name: "<lang:upgrade.pickup-range.name>"
     lore:
+      - "<lang:gui.upgrades.pickup-range.lore-1>"
+      - "<lang:gui.upgrades.pickup-range.lore-2>"
+      - ""
       - "<lang:gui.upgrades.level>"
       - "<lang:gui.upgrades.current>"
       - "<lang:gui.upgrades.next>"
+      - ""
       - "<lang:gui.upgrades.buy>"
   RM:
     material: SPYGLASS
     glow: true
     name: "<lang:upgrade.pickup-range.name>"
     lore:
+      - "<lang:gui.upgrades.pickup-range.lore-1>"
+      - "<lang:gui.upgrades.pickup-range.lore-2>"
+      - ""
       - "<lang:gui.upgrades.level>"
       - "<lang:gui.upgrades.current>"
       - "<lang:gui.upgrades.maxed>"
@@ -92,9 +114,23 @@ items:
       - "<lang:gui.upgrades.slots.lore-1>"
       - "<lang:gui.upgrades.slots.lore-2>"
       - ""
+      - "<lang:gui.upgrades.slots.unlocked>"
+      - "<lang:gui.upgrades.slots.pages>"
+      - ""
       - "<lang:gui.upgrades.slots.buy-one>"
       - "<lang:gui.upgrades.slots.buy-bulk>"
       - "<lang:gui.upgrades.slots.buy-page>"
+  SP:
+    material: CHEST
+    name: "<lang:upgrade.slots.name>"
+    lore:
+      - "<lang:gui.upgrades.slots.lore-1>"
+      - "<lang:gui.upgrades.slots.lore-2>"
+      - ""
+      - "<lang:gui.upgrades.slots.unlocked>"
+      - "<lang:gui.upgrades.slots.pages>"
+      - ""
+      - "<lang:gui.upgrades.slots.buy-page-only>"
   SM:
     material: CHEST
     glow: true
@@ -103,21 +139,32 @@ items:
       - "<lang:gui.upgrades.slots.lore-1>"
       - "<lang:gui.upgrades.slots.lore-2>"
       - ""
+      - "<lang:gui.upgrades.slots.unlocked>"
+      - "<lang:gui.upgrades.slots.pages>"
       - "<lang:gui.upgrades.maxed>"
 
   C:
     material: SHULKER_SHELL
     name: "<lang:upgrade.slot-capacity.name>"
     lore:
+      - "<lang:gui.upgrades.slot-capacity.lore-1>"
+      - "<lang:gui.upgrades.slot-capacity.lore-2>"
+      - "<lang:gui.upgrades.slot-capacity.lore-3>"
+      - ""
       - "<lang:gui.upgrades.level>"
       - "<lang:gui.upgrades.current>"
       - "<lang:gui.upgrades.next>"
+      - ""
       - "<lang:gui.upgrades.buy>"
   CM:
     material: SHULKER_SHELL
     glow: true
     name: "<lang:upgrade.slot-capacity.name>"
     lore:
+      - "<lang:gui.upgrades.slot-capacity.lore-1>"
+      - "<lang:gui.upgrades.slot-capacity.lore-2>"
+      - "<lang:gui.upgrades.slot-capacity.lore-3>"
+      - ""
       - "<lang:gui.upgrades.level>"
       - "<lang:gui.upgrades.current>"
       - "<lang:gui.upgrades.maxed>"
@@ -126,6 +173,10 @@ items:
     material: BARRIER
     name: "<lang:gui.upgrades.locked.name>"
     lore:
-      - "<lang:gui.upgrades.locked.lore>"
+      - "<lang:gui.upgrades.locked.lore-1>"
+      - "<lang:gui.upgrades.locked.lore-2>"
+      - ""
+      - "<lang:gui.upgrades.level>"
+      - "<lang:gui.upgrades.current>"
       - ""
       - "<lang:gui.upgrades.reason>"

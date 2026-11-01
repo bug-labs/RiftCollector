@@ -147,8 +147,8 @@ public final class TrustMenu extends Menu {
         MenuIcon icon = layout.icon(entryIcon);
         ItemStack stack = icon == null
                 ? new ItemStack(org.bukkit.Material.PLAYER_HEAD)
-                : icon.render(context, lang, TagResolver.resolver(
-                        Placeholder.unparsed("player", name(entry))));
+                : icon.render(context, lang, viewer, TagResolver.resolver(
+                        Placeholder.unparsed("player", name(entry)), placeholders()));
         if (stack.getItemMeta() instanceof SkullMeta) {
             stack.editMeta(SkullMeta.class, meta -> meta.setOwningPlayer(Bukkit.getOfflinePlayer(entry.getKey())));
         }
@@ -156,9 +156,8 @@ public final class TrustMenu extends Menu {
     }
 
     @Override
-    protected TagResolver placeholders() {
-        return TagResolver.resolver(
-                Placeholder.unparsed("trusted", Integer.toString(collector.trusted().size())));
+    protected void reopen(Player player) {
+        menus.openTrust(player, collector);
     }
 
     @Override

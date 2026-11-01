@@ -29,6 +29,16 @@ limits:
   # How many collectors may be placed in one chunk.
   collectors-per-chunk: 1
 
+# Names players give their collectors from the Settings menu, which show in the collector's
+# menus and on its hologram.
+names:
+  # The longest name a player may set.
+  max-length: 32
+  # Lets players use colour codes and MiniMessage tags in a name. Leave this off unless you
+  # trust everyone who can rename a collector: a tag can do more than colour text, and the
+  # name is shown to everyone who opens the collector.
+  allow-formatting: false
+
 collection:
   # CHUNK  - the pickup range upgrade counts chunks around the collector's own chunk.
   # RADIUS - the pickup range upgrade counts blocks, ignoring chunk borders.
@@ -62,7 +72,10 @@ holograms:
   offset-y: 1.4
   # How often the text is redrawn, in seconds.
   update-interval-seconds: 5
-  # Lines of the hologram. Placeholders: <owner> <items> <stored> <capacity> <earnings> <sold>
+  # Lines of the hologram.
+  # Placeholders: <name> <owner> <items> <stored> <capacity> <earnings> <sold>
+  # With PlaceholderAPI installed, its %placeholders% work here too and are filled in for the
+  # collector's owner.
   lines:
     - "<lang:hologram.owner>"
     - "<lang:hologram.stored>"

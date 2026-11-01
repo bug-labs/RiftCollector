@@ -11,7 +11,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 /** The Settings category: one toggle per ability, each behind its own permission. */
@@ -94,7 +93,8 @@ public final class SettingsMenu extends Menu {
             String character = !allowed ? set.locked() : enabled ? set.enabled() : set.disabled();
             MenuIcon icon = layout.icon(character);
             if (icon != null) {
-                inventory.setItem(entry.getKey(), icon.render(context, lang, placeholdersFor(ability, enabled)));
+                inventory.setItem(entry.getKey(),
+                        icon.render(context, lang, viewer, placeholdersFor(ability, enabled)));
             }
         }
     }
@@ -114,9 +114,12 @@ public final class SettingsMenu extends Menu {
                 Placeholder.component("ability", lang.get("ability." + ability.key() + ".name")),
                 Placeholder.component("state", lang.get(enabled ? "ability.state-on" : "ability.state-off")),
                 Placeholder.component("reason", reason(ability)),
-                Placeholder.unparsed("earnings", services.economy().format(collector.earnings())),
-                Placeholder.unparsed("sold", String.format(Locale.ROOT, "%,d", collector.itemsSold())),
-                Placeholder.unparsed("trusted", Integer.toString(collector.trusted().size())));
+                placeholders());
+    }
+
+    @Override
+    protected void reopen(Player player) {
+        menus.openSettings(player, collector);
     }
 
     /** Says on the item itself why a setting cannot be used, instead of leaving it a mystery. */

@@ -3,6 +3,7 @@ package me.iamsamarth.riftcollector.gui;
 import me.iamsamarth.riftcollector.ability.SellService;
 import me.iamsamarth.riftcollector.collector.CollectorItem;
 import me.iamsamarth.riftcollector.collector.CollectorService;
+import me.iamsamarth.riftcollector.config.PluginConfig;
 import me.iamsamarth.riftcollector.hologram.HologramManager;
 import me.iamsamarth.riftcollector.hook.EconomyService;
 import me.iamsamarth.riftcollector.upgrade.UpgradeService;
@@ -18,5 +19,6 @@ public record MenuServices(Plugin plugin,
                            HologramManager holograms,
                            ChatPrompt prompts,
                            CollectorService collectors,
-                           CollectorItem collectorItem) {
+                           CollectorItem collectorItem,
+                           PluginConfig.Names names) {
 }

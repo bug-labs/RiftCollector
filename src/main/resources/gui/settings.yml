@@ -1,6 +1,7 @@
-# Settings menu: the abilities a collector can have switched on.
+# Settings menu: the abilities a collector can have switched on, plus its name.
 #
-# Placeholders in a setting's item: <ability> <state> <earnings> <sold>
+# Placeholders in a setting's item, on top of the ones every menu has:
+#   <ability> <state> <reason>
 
 title: "<lang:gui.settings.title>"
 rows: 3
@@ -9,12 +10,13 @@ content-character: "#"
 layout:
   - "DDDDDDDDD"
   - "D       D"
-  - "DDDTBDDDD"
+  - "DDDTBNDDD"
 
 # slot           where the toggle is drawn
 # enabled-icon   item shown while the ability is on
 # disabled-icon  item shown while it is off
 # locked-icon    item shown when the player lacks riftcollector.ability.<name>
+# Each of those names an entry under 'items' below.
 settings:
   auto-sell:
     slot: 11
@@ -40,6 +42,8 @@ items:
   B:
     material: ARROW
     name: "<lang:gui.back.name>"
+    lore:
+      - "<lang:gui.back.lore>"
     action: back
 
   T:
@@ -48,58 +52,105 @@ items:
     lore:
       - "<lang:gui.collector.trust.lore-1>"
       - "<lang:gui.collector.trust.lore-2>"
-      - ""
       - "<lang:gui.collector.trust.lore-3>"
+      - ""
+      - "<lang:gui.collector.trust.count>"
+      - ""
+      - "<lang:gui.collector.trust.hint>"
     action: open-trust
+
+  N:
+    material: NAME_TAG
+    name: "<lang:gui.settings.rename.name>"
+    lore:
+      - "<lang:gui.settings.rename.lore-1>"
+      - "<lang:gui.settings.rename.lore-2>"
+      - "<lang:gui.settings.rename.lore-3>"
+      - ""
+      - "<lang:gui.settings.rename.current>"
+      - ""
+      - "<lang:gui.settings.rename.hint>"
+    action: rename
 
   SE:
     material: GOLD_INGOT
     glow: true
     name: "<lang:ability.auto-sell.name>"
     lore:
+      - "<lang:gui.settings.auto-sell.lore-1>"
+      - "<lang:gui.settings.auto-sell.lore-2>"
+      - "<lang:gui.settings.auto-sell.lore-3>"
+      - ""
       - "<lang:gui.settings.state>"
       - "<lang:gui.settings.earnings>"
-      - "<lang:gui.settings.toggle>"
+      - ""
+      - "<lang:gui.settings.reason>"
   SD:
     material: GOLD_NUGGET
     name: "<lang:ability.auto-sell.name>"
     lore:
+      - "<lang:gui.settings.auto-sell.lore-1>"
+      - "<lang:gui.settings.auto-sell.lore-2>"
+      - "<lang:gui.settings.auto-sell.lore-3>"
+      - ""
       - "<lang:gui.settings.state>"
       - "<lang:gui.settings.earnings>"
-      - "<lang:gui.settings.toggle>"
+      - ""
+      - "<lang:gui.settings.reason>"
 
   ME:
     material: BLAST_FURNACE
     glow: true
     name: "<lang:ability.auto-smelt.name>"
     lore:
+      - "<lang:gui.settings.auto-smelt.lore-1>"
+      - "<lang:gui.settings.auto-smelt.lore-2>"
+      - "<lang:gui.settings.auto-smelt.lore-3>"
+      - ""
       - "<lang:gui.settings.state>"
-      - "<lang:gui.settings.toggle>"
+      - ""
+      - "<lang:gui.settings.reason>"
   MD:
     material: FURNACE
     name: "<lang:ability.auto-smelt.name>"
     lore:
+      - "<lang:gui.settings.auto-smelt.lore-1>"
+      - "<lang:gui.settings.auto-smelt.lore-2>"
+      - "<lang:gui.settings.auto-smelt.lore-3>"
+      - ""
       - "<lang:gui.settings.state>"
-      - "<lang:gui.settings.toggle>"
+      - ""
+      - "<lang:gui.settings.reason>"
 
   HE:
     material: ITEM_FRAME
     glow: true
     name: "<lang:ability.hologram.name>"
     lore:
+      - "<lang:gui.settings.hologram.lore-1>"
+      - "<lang:gui.settings.hologram.lore-2>"
+      - ""
       - "<lang:gui.settings.state>"
-      - "<lang:gui.settings.toggle>"
+      - ""
+      - "<lang:gui.settings.reason>"
   HD:
     material: ITEM_FRAME
     name: "<lang:ability.hologram.name>"
     lore:
+      - "<lang:gui.settings.hologram.lore-1>"
+      - "<lang:gui.settings.hologram.lore-2>"
+      - ""
       - "<lang:gui.settings.state>"
-      - "<lang:gui.settings.toggle>"
+      - ""
+      - "<lang:gui.settings.reason>"
 
   L:
     material: BARRIER
     name: "<lang:gui.settings.locked.name>"
     lore:
-      - "<lang:gui.settings.locked.lore>"
+      - "<lang:gui.settings.locked.lore-1>"
+      - "<lang:gui.settings.locked.lore-2>"
+      - ""
+      - "<lang:gui.settings.state>"
       - ""
       - "<lang:gui.settings.reason>"

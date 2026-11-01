@@ -11,9 +11,11 @@ items. Collectors are owned, upgradeable, and can filter, smelt and sell what th
 - **Counted storage** — a slot counts its items instead of stacking them. Take 1, take a stack, or
   fill your inventory in a click.
 - **Upgrades** — pickup speed, pickup range, storage slots and items per slot, bought with money.
+  They travel with the collector when it is picked up or broken.
 - **Auto sell and auto smelt** — sell drops as they are picked up, or smelt them first.
 - **Filters** — whitelist or blacklist exactly what a collector picks up.
 - **Owners and trusted players** — only the owner, players they trust, and staff can open one.
+- **Names** — players can name a collector, shown in its menus and on its hologram.
 - **Holograms** — floating text above each collector, using vanilla text displays.
 - **Everything is a config file** — menus are character grids in `gui/`, all text lives in `lang/`,
   in MiniMessage, `&` codes or hex.
@@ -26,8 +28,8 @@ items. Collectors are owned, upgradeable, and can filter, smelt and sell what th
 | Paper (or a fork) | 1.21.11 |
 | Java | 21+ |
 
-Optional: Vault, ExcellentEconomy, ShopGUI+, EconomyShopGUI / +, zItemStacker. Each is explained in
-the [integrations docs](https://iamsamarth.github.io/wiki/riftcollector/integrations/).
+Optional: PlaceholderAPI, Vault, ExcellentEconomy, ShopGUI+, EconomyShopGUI / +, zItemStacker. Each
+is explained in the [integrations docs](https://iamsamarth.github.io/wiki/riftcollector/integrations/).
 
 ## Documentation
 
@@ -52,12 +54,19 @@ The jar lands in `build/libs/`. Java 21 is required; the Gradle wrapper is inclu
   permission plugin.
 - **1.x collectors are not imported.** The old database is left untouched on disk, so you can roll
   back by reinstalling 1.x.
-- **Features dropped in this beta:** XP collection and the XP bank, collector renaming,
-  PlaceholderAPI placeholders, WorldGuard region checks, `tiers.yml` (upgrades are now in
-  `config.yml`), the per-player collector limit, and the de/es/fr locales. Only `en_US` ships, and
-  translations are a copy of one file.
+- **Features dropped in this beta:** XP collection and the XP bank, WorldGuard region checks,
+  `tiers.yml` (upgrades are now in `config.yml`), the per-player collector limit, and the de/es/fr
+  locales. Only `en_US` ships, and translations are a copy of one file.
 
 Test it on a copy of your world first.
+
+## Upgrading from 2.0.0-beta.1
+
+Menus and messages were rewritten in beta.2, and the updater never overwrites a file you already
+have. The old wording keeps working, but to take the new one, delete
+`plugins/RiftCollector/gui/` and `plugins/RiftCollector/lang/en_US.yml` and restart; both are
+written fresh from the jar. `config.yml` and `prices.yml` need nothing: new settings are added to
+them and your values are kept.
 
 ## Support
 

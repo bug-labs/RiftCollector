@@ -6,6 +6,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
@@ -55,9 +56,15 @@ public final class Lang {
     private final Plugin plugin;
     private final Set<String> reportedMissing = new HashSet<>();
     private FileConfiguration messages = new YamlConfiguration();
+    private Placeholders placeholders = Placeholders.NONE;
 
     public Lang(Plugin plugin) {
         this.plugin = plugin;
+    }
+
+    /** Hands over another plugin's placeholders, which then work in every line loaded here. */
+    public void placeholders(Placeholders placeholders) {
+        this.placeholders = placeholders;
     }
 
     public void load(String locale) {
@@ -84,38 +91,56 @@ public final class Lang {
     }
 
     public Component get(String key, TagResolver... placeholders) {
-        return parse(raw(key), 0, placeholders);
+        return get(null, key, placeholders);
+    }
+
+    /** {@code target} is whose placeholders a line is filled in for; null uses none. */
+    public Component get(@Nullable OfflinePlayer target, String key, TagResolver... placeholders) {
+        return parse(target, raw(key), 0, placeholders);
     }
 
     public List<Component> getList(String key, TagResolver... placeholders) {
+        return getList(null, key, placeholders);
+    }
+
+    public List<Component> getList(@Nullable OfflinePlayer target, String key, TagResolver... placeholders) {
         List<String> lines = messages.getStringList(key);
         List<Component> components = new ArrayList<>(lines.size());
         for (String line : lines) {
-            components.add(parse(line, 0, placeholders));
+            components.add(parse(target, line, 0, placeholders));
         }
         return components;
     }
 
+    /** A message to a player is filled in for that player, which is what they expect to read. */
     public void send(Audience audience, String key, TagResolver... placeholders) {
-        audience.sendMessage(get(key, placeholders));
+        audience.sendMessage(get(audience instanceof OfflinePlayer player ? player : null, key, placeholders));
     }
 
     /** Parses text that is not itself a message, such as a name from a menu file. */
     public Component parse(String raw, TagResolver... placeholders) {
-        return parse(raw, 0, placeholders);
+        return parse(null, raw, 0, placeholders);
     }
 
-    private Component parse(String raw, int depth, TagResolver... placeholders) {
+    public Component parse(@Nullable OfflinePlayer target, String raw, TagResolver... placeholders) {
+        return parse(target, raw, 0, placeholders);
+    }
+
+    private Component parse(@Nullable OfflinePlayer target, String raw, int depth,
+                            TagResolver... placeholders) {
         TagResolver langTag = TagResolver.resolver("lang", (arguments, context) -> {
             String key = arguments.popOr("The lang tag needs a message key").value();
             Component inserted = depth >= MAX_DEPTH
                     ? Component.text(key)
-                    : parse(raw(key), depth + 1, placeholders);
+                    : parse(target, raw(key), depth + 1, placeholders);
             return Tag.selfClosingInserting(inserted);
         });
 
+        // Another plugin's placeholders are filled in first: what they return is text, which
+        // this then colours and reads tags from like any other line.
+        String filled = this.placeholders.apply(target, raw);
         return MiniMessage.miniMessage()
-                .deserialize(modernize(raw), TagResolver.resolver(langTag, TagResolver.resolver(placeholders)))
+                .deserialize(modernize(filled), TagResolver.resolver(langTag, TagResolver.resolver(placeholders)))
                 .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
     }
 

@@ -4,7 +4,6 @@ import me.iamsamarth.riftcollector.collector.Collector;
 import me.iamsamarth.riftcollector.collector.StoredStack;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
@@ -81,24 +80,13 @@ public final class CollectorMenu extends Menu {
             int storageIndex = storageIndex(index);
             if (storageIndex >= capacity) {
                 // Slots the collector has not unlocked yet, shown only when the page is partly usable.
-                inventory.setItem(slots[index], locked == null ? null : locked.render(context, lang, placeholders()));
+                inventory.setItem(slots[index],
+                        locked == null ? null : locked.render(context, lang, viewer, placeholders()));
                 continue;
             }
             StoredStack stored = collector.stack(storageIndex);
             inventory.setItem(slots[index], stored == null ? null : display(stored));
         }
-    }
-
-    @Override
-    protected TagResolver placeholders() {
-        return TagResolver.resolver(
-                lazy("value", () -> services.economy().format(services.sales().value(collector))),
-                Placeholder.unparsed("earnings", services.economy().format(collector.earnings())),
-                Placeholder.unparsed("sold", String.format(Locale.ROOT, "%,d", collector.itemsSold())),
-                Placeholder.unparsed("trusted", Integer.toString(collector.trusted().size())),
-                Placeholder.component("owner", collector.ownerName() == null
-                        ? lang.get("collector.unknown-owner")
-                        : Component.text(collector.ownerName())));
     }
 
     @Override
@@ -215,7 +203,7 @@ public final class CollectorMenu extends Menu {
         stack.editMeta(meta -> {
             List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
             for (String line : extraLore) {
-                lore.add(lang.parse(line,
+                lore.add(lang.parse(viewer, line,
                         Placeholder.unparsed("amount", String.format(Locale.ROOT, "%,d", stored.amount())),
                         Placeholder.unparsed("stack-cap", String.format(Locale.ROOT, "%,d", slotCap()))));
             }
