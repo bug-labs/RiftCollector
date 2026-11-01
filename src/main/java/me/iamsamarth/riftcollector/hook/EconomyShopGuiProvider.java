@@ -7,6 +7,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -16,11 +17,14 @@ import java.util.Optional;
  */
 public final class EconomyShopGuiProvider implements PriceProvider {
 
+    /** Both editions register the same API; the premium one has shipped under several names. */
+    private static final List<String> PLUGIN_NAMES =
+            List.of("EconomyShopGUI", "EconomyShopGUI+", "EconomyShopGUI-Premium", "EconomyShopGUIPremium");
+
     private final boolean present;
 
     public EconomyShopGuiProvider(Plugin plugin) {
-        this.present = (plugin.getServer().getPluginManager().getPlugin("EconomyShopGUI") != null
-                || plugin.getServer().getPluginManager().getPlugin("EconomyShopGUI+") != null)
+        this.present = Hooks.pluginPresent(plugin, PLUGIN_NAMES)
                 && Hooks.classPresent("me.gypopo.economyshopgui.api.EconomyShopGUIHook");
     }
 

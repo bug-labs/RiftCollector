@@ -1,16 +1,14 @@
 package me.iamsamarth.riftcollector.listener;
 
 import me.iamsamarth.riftcollector.RiftCollector;
+import me.iamsamarth.riftcollector.ability.Ability;
 import me.iamsamarth.riftcollector.collector.Collector;
 import me.iamsamarth.riftcollector.collector.CollectorItem;
 import me.iamsamarth.riftcollector.collector.CollectorService;
-import me.iamsamarth.riftcollector.collector.StoredStack;
 
 import me.iamsamarth.riftcollector.lang.Lang;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.DoubleChest;
@@ -27,9 +25,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
 
 public final class CollectorListener implements Listener {
 
@@ -69,11 +66,9 @@ public final class CollectorListener implements Listener {
         }
 
         Collector collector = collectors.create(block, block.getType(), player);
-        // A collector that was broken with items inside carries them in the dropped item.
-        List<StoredStack> carried = collectorItem.contents(event.getItemInHand());
-        if (!carried.isEmpty()) {
-            collector.fill(carried);
-        }
+        // A collector that left the ground carries its contents, upgrades and settings in the
+        // item it became, so putting it back down picks up where it left off.
+        restore(collector, collectorItem.carried(event.getItemInHand()));
         plugin.holograms().refresh(collector);
         lang.send(player, "collector.placed");
     }
@@ -101,12 +96,12 @@ public final class CollectorListener implements Listener {
 
         plugin.menus().registry().closeFor(collector);
         boolean dropCollector = event.isDropItems() && player.getGameMode() != GameMode.CREATIVE;
+        ItemStack dropped = collectorItem.create(collector);
         collectors.remove(collector);
 
         event.setDropItems(false);
         if (dropCollector) {
-            block.getWorld().dropItemNaturally(block.getLocation().toCenterLocation(),
-                    collectorItem.create(1, collector.material()));
+            block.getWorld().dropItemNaturally(block.getLocation().toCenterLocation(), dropped);
         }
     }
 
@@ -156,6 +151,26 @@ public final class CollectorListener implements Listener {
         if (belongsToCollector(event.getInventory())) {
             event.setCancelled(true);
         }
+    }
+
+    /**
+     * Puts back what the item remembers. Nothing is applied for an item that never was a
+     * collector, so one out of /collector give still starts on the defaults.
+     */
+    private void restore(Collector collector, CollectorItem.Carried carried) {
+        collector.fill(carried.contents());
+        if (!carried.fromCollector()) {
+            return;
+        }
+        carried.upgrades().forEach(collector::upgradeLevel);
+        for (Ability ability : Ability.values()) {
+            collector.ability(ability, carried.abilities().contains(ability));
+        }
+        if (carried.filterMode() != null) {
+            collector.filterMode(carried.filterMode());
+        }
+        carried.filter().forEach(collector::addFilter);
+        collector.displayName(carried.displayName());
     }
 
     /** Opening and using: the owner, anyone they trusted, and staff. */

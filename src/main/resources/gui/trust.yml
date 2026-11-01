@@ -15,8 +15,9 @@ layout:
   - "D#######D"
   - "D<DDADD>B"
 
-# The item drawn for each trusted player. It is not part of the layout above: the menu puts one
-# in every content slot it needs. A player head is filled in with that player's skin.
+# The item drawn for each trusted player, naming an entry under 'items' below. It is not part
+# of the layout above: the menu puts one in every content slot it needs, and a player head is
+# filled in with that player's skin.
 list:
   icon: "H"
 
@@ -30,8 +31,9 @@ items:
     name: "<lang:gui.trust.entry.name>"
     lore:
       - "<lang:gui.trust.entry.lore-1>"
-      - ""
       - "<lang:gui.trust.entry.lore-2>"
+      - ""
+      - "<lang:gui.trust.entry.hint>"
 
   A:
     material: WRITABLE_BOOK
@@ -39,18 +41,25 @@ items:
     lore:
       - "<lang:gui.trust.add.lore-1>"
       - "<lang:gui.trust.add.lore-2>"
-      - ""
       - "<lang:gui.trust.add.lore-3>"
+      - ""
+      - "<lang:gui.trust.add.offline>"
+      - ""
+      - "<lang:gui.trust.add.hint>"
     action: trust-add
 
   B:
     material: ARROW
     name: "<lang:gui.back.name>"
+    lore:
+      - "<lang:gui.back.lore>"
     action: back
 
   '<':
     material: ARROW
     name: "<lang:gui.collector.previous-page.name>"
+    lore:
+      - "<lang:gui.collector.previous-page.lore>"
     action: previous-page
     show-if: has-previous-page
     fallback: D
@@ -58,6 +67,8 @@ items:
   '>':
     material: ARROW
     name: "<lang:gui.collector.next-page.name>"
+    lore:
+      - "<lang:gui.collector.next-page.lore>"
     action: next-page
     show-if: has-next-page
     fallback: D

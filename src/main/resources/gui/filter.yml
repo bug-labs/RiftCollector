@@ -2,7 +2,8 @@
 # inventory to add it, click one in the list to remove it, and click the mode item to switch
 # between off, whitelist and blacklist.
 #
-# Placeholders in the mode item: <mode> <items>
+# Placeholders in the mode item, on top of the ones every menu has:
+#   <mode> the mode right now, <filtered> how many items are listed
 
 title: "<lang:gui.filter.title>"
 rows: 6
@@ -16,8 +17,9 @@ layout:
   - "D#######D"
   - "D<DD D>HB"
 
-# Which slot shows the current mode, and the item used for each mode. The slot is left blank
-# in the layout above, because the menu draws it itself.
+# Which slot shows the current mode, and the item used for each mode; each names an entry
+# under 'items' below. The slot is left blank in the layout above, because the menu draws it
+# itself.
 mode:
   slot: 49
   disabled-icon: MO
@@ -32,11 +34,15 @@ items:
   B:
     material: ARROW
     name: "<lang:gui.back.name>"
+    lore:
+      - "<lang:gui.back.lore>"
     action: back
 
   '<':
     material: ARROW
     name: "<lang:gui.collector.previous-page.name>"
+    lore:
+      - "<lang:gui.collector.previous-page.lore>"
     action: previous-page
     show-if: has-previous-page
     fallback: D
@@ -44,6 +50,8 @@ items:
   '>':
     material: ARROW
     name: "<lang:gui.collector.next-page.name>"
+    lore:
+      - "<lang:gui.collector.next-page.lore>"
     action: next-page
     show-if: has-next-page
     fallback: D
@@ -52,25 +60,45 @@ items:
     material: LIGHT_GRAY_DYE
     name: "<lang:gui.filter.mode.name>"
     lore:
-      - "<lang:gui.filter.mode.lore>"
+      - "<lang:gui.filter.mode.lore-1>"
+      - "<lang:gui.filter.mode.lore-2>"
+      - "<lang:gui.filter.mode.lore-3>"
+      - ""
+      - "<lang:gui.filter.mode.current>"
+      - ""
       - "<lang:gui.filter.mode.hint>"
   MW:
     material: LIME_DYE
     glow: true
     name: "<lang:gui.filter.mode.name>"
     lore:
-      - "<lang:gui.filter.mode.lore>"
+      - "<lang:gui.filter.mode.lore-1>"
+      - "<lang:gui.filter.mode.lore-2>"
+      - "<lang:gui.filter.mode.lore-3>"
+      - ""
+      - "<lang:gui.filter.mode.current>"
+      - ""
       - "<lang:gui.filter.mode.hint>"
   MB:
     material: RED_DYE
     glow: true
     name: "<lang:gui.filter.mode.name>"
     lore:
-      - "<lang:gui.filter.mode.lore>"
+      - "<lang:gui.filter.mode.lore-1>"
+      - "<lang:gui.filter.mode.lore-2>"
+      - "<lang:gui.filter.mode.lore-3>"
+      - ""
+      - "<lang:gui.filter.mode.current>"
+      - ""
       - "<lang:gui.filter.mode.hint>"
 
   H:
-    material: NAME_TAG
+    material: BOOK
     name: "<lang:gui.filter.help.name>"
     lore:
-      - "<lang:gui.filter.help.lore>"
+      - "<lang:gui.filter.help.lore-1>"
+      - "<lang:gui.filter.help.lore-2>"
+      - ""
+      - "<lang:gui.filter.help.add>"
+      - "<lang:gui.filter.help.add-2>"
+      - "<lang:gui.filter.help.remove>"

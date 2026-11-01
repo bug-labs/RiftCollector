@@ -15,6 +15,7 @@ public record PluginConfig(String language,
                            Database database,
                            Storage storage,
                            Limits limits,
+                           Names names,
                            Collection collection,
                            Economy economy,
                            Holograms holograms,
@@ -51,6 +52,13 @@ public record PluginConfig(String language,
     }
 
     public record Limits(int collectorsPerChunk) {
+    }
+
+    /**
+     * Collector names typed by players. Formatting is off by default because a MiniMessage tag
+     * can do more than colour text, and a name is shown to everyone who opens the collector.
+     */
+    public record Names(int maxLength, boolean allowFormatting) {
     }
 
     public record Collection(RangeType rangeType,
@@ -113,6 +121,10 @@ public record PluginConfig(String language,
                         Math.max(1L, config.getLong("storage.save-interval-seconds", 300L)) * 20L,
                         config.getBoolean("storage.import-legacy-chunk-data", true)),
                 new Limits(Math.max(1, config.getInt("limits.collectors-per-chunk", 1))),
+                new Names(
+                        // 64 is what the name column of collector_settings holds.
+                        Math.clamp(config.getInt("names.max-length", 32), 1, 64),
+                        config.getBoolean("names.allow-formatting", false)),
                 new Collection(
                         readEnum(config.getString("collection.range-type"), RangeType.class, RangeType.CHUNK,
                                 "collection.range-type", logger),

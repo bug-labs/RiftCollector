@@ -17,6 +17,7 @@ import me.iamsamarth.riftcollector.hologram.HologramManager;
 import me.iamsamarth.riftcollector.hook.Hooks;
 import me.iamsamarth.riftcollector.hook.ItemStackerHook;
 import me.iamsamarth.riftcollector.hook.EconomyService;
+import me.iamsamarth.riftcollector.hook.PlaceholderApiHook;
 import me.iamsamarth.riftcollector.lang.Lang;
 import me.iamsamarth.riftcollector.listener.CollectorListener;
 import me.iamsamarth.riftcollector.storage.CollectorRepository;
@@ -41,6 +42,7 @@ public final class RiftCollector extends JavaPlugin {
     private EconomyService economy;
     private SellService sales;
     private ItemStackerHook stackers;
+    private PlaceholderApiHook papi;
     private Database database;
     private CollectorService collectors;
     private CollectorItem collectorItem;
@@ -55,10 +57,14 @@ public final class RiftCollector extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         // Keeps an existing config, adding whatever this version introduced.
-        ConfigUpdater.update(this, "config.yml", "prices.yml", "lang/en_US.yml");
+        ConfigUpdater.update(this, "config.yml", "lang/en_US.yml");
+        // Prices are a list the owner curates, so a price they delete is not written back.
+        ConfigUpdater.updateData(this, "prices.yml");
         ConfigUpdater.updateMenus(this, "collector", "upgrades", "settings", "filter", "trust");
         config = PluginConfig.load(this);
         lang = new Lang(this);
+        papi = new PlaceholderApiHook(this);
+        lang.placeholders(papi);
         lang.load(config.language());
 
         if (!connect()) {
@@ -72,7 +78,8 @@ public final class RiftCollector extends JavaPlugin {
         stackers.hook();
         upgrades = Upgrades.load(getConfig(), getLogger());
         sales = new SellService(Hooks.priceProviders(this, config), economy, config.collection().sellCurrency());
-        holograms = new HologramManager(collectors, lang, upgrades, economy, config.holograms());
+        holograms = new HologramManager(collectors, lang, upgrades, economy,
+                config.holograms(), config.names());
         collectors.onRemove(holograms::remove);
         collectorItem = new CollectorItem(this, lang);
 
@@ -105,6 +112,8 @@ public final class RiftCollector extends JavaPlugin {
         CollectorCommand executor = new CollectorCommand(this, collectorItem, lang);
         command.setExecutor(executor);
         command.setTabCompleter(executor);
+
+        papi.register(collectors, upgrades, economy);
 
         startTasks();
         updates.start(config.updates());
@@ -155,7 +164,9 @@ public final class RiftCollector extends JavaPlugin {
         collectors.flush();
 
         PluginConfig.Database previous = config.database();
-        ConfigUpdater.update(this, "config.yml", "prices.yml", "lang/en_US.yml");
+        ConfigUpdater.update(this, "config.yml", "lang/en_US.yml");
+        // Prices are a list the owner curates, so a price they delete is not written back.
+        ConfigUpdater.updateData(this, "prices.yml");
         ConfigUpdater.updateMenus(this, "collector", "upgrades", "settings", "filter", "trust");
         reloadConfig();
         config = PluginConfig.load(this);
@@ -167,7 +178,7 @@ public final class RiftCollector extends JavaPlugin {
         economy.hook(config.economy());
         upgrades = Upgrades.load(getConfig(), getLogger());
         sales = new SellService(Hooks.priceProviders(this, config), economy, config.collection().sellCurrency());
-        holograms.settings(config.holograms(), upgrades);
+        holograms.settings(config.holograms(), config.names(), upgrades);
         menus.services(menuServices());
         menus.load();
 
@@ -177,7 +188,7 @@ public final class RiftCollector extends JavaPlugin {
 
     private MenuServices menuServices() {
         return new MenuServices(this, upgrades, new UpgradeService(upgrades, economy), economy, sales,
-                holograms, prompts, collectors, collectorItem);
+                holograms, prompts, collectors, collectorItem, config.names());
     }
 
     private boolean connect() {

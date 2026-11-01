@@ -34,6 +34,19 @@ import java.util.logging.Logger;
  */
 public final class ConfigUpdater {
 
+    /** How much of a file the plugin considers its own. */
+    private enum Mode {
+        /** Settings: a missing key is put back with its default, a retired one is dropped. */
+        SETTINGS,
+        /** A settings file that also has a character grid to merge new buttons into. */
+        MENU,
+        /**
+         * A list the owner curates, such as the prices. An entry the jar ships is written once
+         * and never again, so deleting one keeps it deleted instead of coming back every reload.
+         */
+        DATA
+    }
+
     private static final DateTimeFormatter BACKUP_STAMP = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
     private static final String MANIFEST_FOLDER = ".managed";
     private static final int COLUMNS = 9;
@@ -43,18 +56,25 @@ public final class ConfigUpdater {
 
     public static void update(Plugin plugin, String... resources) {
         for (String resource : resources) {
-            apply(plugin, resource, false);
+            apply(plugin, resource, Mode.SETTINGS);
+        }
+    }
+
+    /** Files whose entries are the owner's to add and remove, where only brand new ones appear. */
+    public static void updateData(Plugin plugin, String... resources) {
+        for (String resource : resources) {
+            apply(plugin, resource, Mode.DATA);
         }
     }
 
     /** Menu files, where the layout grid is merged as well as the keys. */
     public static void updateMenus(Plugin plugin, String... names) {
         for (String name : names) {
-            apply(plugin, "gui/" + name + ".yml", true);
+            apply(plugin, "gui/" + name + ".yml", Mode.MENU);
         }
     }
 
-    private static void apply(Plugin plugin, String resource, boolean menu) {
+    private static void apply(Plugin plugin, String resource, Mode mode) {
         Logger logger = plugin.getLogger();
         try {
             File file = new File(plugin.getDataFolder(), resource);
@@ -72,19 +92,33 @@ public final class ConfigUpdater {
             Set<String> shipped = keysOf(bundled);
             Set<String> managed = readManifest(plugin, resource);
 
-            List<String> added = addMissing(bundled, current);
-            List<String> removed = removeStale(current, shipped, managed);
-            List<String> placed = menu ? mergeLayout(bundled, current, resource, logger) : List.of();
+            List<String> added = mode == Mode.DATA
+                    ? addNewlyShipped(bundled, current, managed)
+                    : addMissing(bundled, current);
+            List<String> removed = mode == Mode.DATA
+                    ? List.of()
+                    : removeStale(current, shipped, managed);
+            List<String> placed = mode == Mode.MENU
+                    ? mergeLayout(bundled, current, resource, logger)
+                    : List.of();
+
+            // A data file remembers every key it has ever shipped, so a deleted entry stays
+            // deleted even once the jar stops listing it.
+            Set<String> record = shipped;
+            if (mode == Mode.DATA) {
+                record = new LinkedHashSet<>(managed);
+                record.addAll(shipped);
+            }
 
             if (added.isEmpty() && removed.isEmpty() && placed.isEmpty()) {
-                writeManifest(plugin, resource, shipped);
+                writeManifest(plugin, resource, record);
                 return;
             }
 
             current.options().setHeader(bundled.options().getHeader());
             backup(file);
             current.save(file);
-            writeManifest(plugin, resource, shipped);
+            writeManifest(plugin, resource, record);
 
             if (!added.isEmpty()) {
                 logger.info("Added to " + resource + ": " + String.join(", ", added));
@@ -116,6 +150,30 @@ public final class ConfigUpdater {
             // Comments are documentation, not settings, so they follow the jar either way.
             current.setComments(key, bundled.getComments(key));
             current.setInlineComments(key, bundled.getInlineComments(key));
+        }
+        return added;
+    }
+
+    /**
+     * Adds only entries the jar has started shipping since the last run. Anything it already
+     * wrote once is the owner's from then on, so the entries they deleted are not written back.
+     */
+    static List<String> addNewlyShipped(YamlConfiguration bundled, YamlConfiguration current,
+                                        Set<String> managed) {
+        List<String> added = new ArrayList<>();
+        for (String key : bundled.getKeys(true)) {
+            if (!managed.contains(key) && !current.contains(key, true)) {
+                if (bundled.isConfigurationSection(key)) {
+                    current.createSection(key);
+                } else {
+                    current.set(key, bundled.get(key));
+                }
+                added.add(key);
+            }
+            if (current.contains(key, true)) {
+                current.setComments(key, bundled.getComments(key));
+                current.setInlineComments(key, bundled.getInlineComments(key));
+            }
         }
         return added;
     }

@@ -28,11 +28,16 @@ public final class Hooks {
                                     + "' in collection.price-providers."));
         }
         for (PriceProvider provider : ordered) {
-            if (provider.available()) {
+            if (provider.installed()) {
                 plugin.getLogger().info("Sell prices available from " + provider.id() + ".");
             }
         }
         return ordered;
+    }
+
+    /** True when any of the names is a plugin on this server; shop plugins are named oddly. */
+    static boolean pluginPresent(Plugin plugin, List<String> names) {
+        return names.stream().anyMatch(name -> plugin.getServer().getPluginManager().getPlugin(name) != null);
     }
 
     /** True when the class is on the classpath, so a missing shop plugin cannot break a lookup. */

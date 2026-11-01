@@ -31,6 +31,7 @@ import java.util.UUID;
 public final class Collector {
 
     private static final String FILTER_MODE_SETTING = "filter-mode";
+    private static final String DISPLAY_NAME_SETTING = "display-name";
     private static final EnumSet<Ability> DEFAULT_ABILITIES = EnumSet.of(Ability.HOLOGRAM);
 
     private final UUID id;
@@ -43,6 +44,7 @@ public final class Collector {
 
     private @Nullable UUID owner;
     private @Nullable String ownerName;
+    private @Nullable String displayName;
     private double earnings;
     private long itemsSold;
 
@@ -126,6 +128,8 @@ public final class Collector {
                 }
             } else if (FILTER_MODE_SETTING.equals(key)) {
                 collector.filterMode = FilterMode.parse(value);
+            } else if (DISPLAY_NAME_SETTING.equals(key)) {
+                collector.displayName = value == null || value.isBlank() ? null : value;
             }
         });
         for (String name : record.filter()) {
@@ -157,6 +161,9 @@ public final class Collector {
             settings.put(ability.key(), Boolean.toString(abilities.contains(ability)));
         }
         settings.put(FILTER_MODE_SETTING, filterMode.name());
+        if (displayName != null) {
+            settings.put(DISPLAY_NAME_SETTING, displayName);
+        }
 
         Set<String> filter = new HashSet<>();
         for (Material filtered : filterMaterials) {
@@ -220,6 +227,17 @@ public final class Collector {
 
     public @Nullable String ownerName() {
         return ownerName;
+    }
+
+    /** The name the owner gave this collector, or null while it is still just "Collector". */
+    public @Nullable String displayName() {
+        return displayName;
+    }
+
+    public void displayName(@Nullable String name) {
+        String trimmed = name == null ? null : name.trim();
+        this.displayName = trimmed == null || trimmed.isEmpty() ? null : trimmed;
+        dirty = true;
     }
 
     public void owner(@Nullable UUID owner, @Nullable String ownerName) {
@@ -410,6 +428,13 @@ public final class Collector {
         return abilities.contains(ability);
     }
 
+    /** Sets an ability outright, used when a replaced collector brings its settings back. */
+    public void ability(Ability ability, boolean enabled) {
+        if (enabled ? abilities.add(ability) : abilities.remove(ability)) {
+            dirty = true;
+        }
+    }
+
     public boolean toggle(Ability ability) {
         boolean enabled = !abilities.remove(ability);
         if (enabled) {
@@ -421,6 +446,13 @@ public final class Collector {
 
     public FilterMode filterMode() {
         return filterMode;
+    }
+
+    public void filterMode(FilterMode mode) {
+        if (filterMode != mode) {
+            filterMode = mode;
+            dirty = true;
+        }
     }
 
     public FilterMode cycleFilterMode() {

@@ -104,7 +104,7 @@ public final class FilterMenu extends Menu {
         if (modeSlot >= 0) {
             MenuIcon icon = layout.icon(modeIcons.get(collector.filterMode()));
             if (icon != null) {
-                inventory.setItem(modeSlot, icon.render(context(), lang, placeholders()));
+                inventory.setItem(modeSlot, icon.render(context(), lang, viewer, placeholders()));
             }
         }
 
@@ -128,7 +128,13 @@ public final class FilterMenu extends Menu {
     protected TagResolver placeholders() {
         return TagResolver.resolver(
                 Placeholder.component("mode", lang.get("filter.mode." + collector.filterMode().key())),
-                Placeholder.unparsed("items", Integer.toString(collector.filterMaterials().size())));
+                Placeholder.unparsed("filtered", Integer.toString(collector.filterMaterials().size())),
+                super.placeholders());
+    }
+
+    @Override
+    protected void reopen(Player player) {
+        menus.openFilter(player, collector);
     }
 
     private void turnTo(int target) {

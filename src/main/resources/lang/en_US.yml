@@ -8,7 +8,8 @@
 #   legacy codes  &c, &l, &r
 #   legacy hex    &#ff5555
 # <lang:some.key> inserts another message from this file, which is how every message
-# below reuses the prefix.
+# below reuses the prefix and the lore bullets.
+# With PlaceholderAPI installed, its %placeholders% work in any line here too.
 # Placeholders are written like <player> and are listed above each message that has any.
 
 prefix: "<gray>[</gray><gold>RiftCollector</gold><gray>]</gray> "
@@ -19,10 +20,12 @@ collector:
   # <owner>
   not-owner: "<lang:prefix><red>This collector belongs to <owner>."
   unknown-owner: "someone else"
+  # Shown wherever <name> is used and the collector has not been given a name.
+  default-name: "<gold>Collector"
   # <limit>
   chunk-limit: "<lang:prefix><red>This chunk already has <limit> collector(s). Place it in another chunk."
   not-empty: "<lang:prefix><red>Empty or sell the contents before taking this collector."
-  picked-up: "<lang:prefix><green>Collector picked up."
+  picked-up: "<lang:prefix><green>Collector picked up. Its upgrades came with it."
   slot-locked: "<lang:prefix><gray>That slot is not unlocked yet. Buy more storage in Upgrades."
 
 command:
@@ -50,15 +53,36 @@ item:
     - "<gray>item that drops inside its range."
     - ""
     - "<dark_gray>Right click a placed collector to open it."
-  # Added only when a collector was removed by force, such as an explosion, while it still
-  # had items in it: the contents travel inside the item.
-  contents: "<yellow>Holding <white><items></white> item(s)"
+  # The lines below are added only to a collector that was taken out of the ground, so the
+  # item says what it is bringing with it.
+  # <name>
+  named: "<lang:gui.bullet><gray>Named <white><name>"
+  # <items>
+  contents: "<lang:gui.bullet><gray>Holding <white><items></white> item(s)"
+  # <count>
+  upgrades: "<lang:gui.bullet><gray><count> upgrade(s) bought"
+  restores: "<dark_gray>All of it comes back when you place it."
 
 sell:
   no-permission: "<lang:prefix><red>You are not allowed to sell from a collector."
   nothing: "<lang:prefix><gray>Nothing in here has a price."
   # <money>, <items>
   sold: "<lang:prefix><green>Sold <white><items></white> item(s) for <white><money></white>."
+
+rename:
+  # <max>
+  prompt: "<lang:prefix><yellow>Type a name in chat, up to <max> characters.\n<lang:prefix><gray>Type <white>reset</white> for the default name, or <white>cancel</white> to stop."
+  # <name>
+  renamed: "<lang:prefix><green>This collector is now called <white><name></white>."
+  reset: "<lang:prefix><gray>The name was cleared."
+  cancelled: "<lang:prefix><gray>The name was left as it was."
+  # <max>
+  too-long: "<lang:prefix><red>That name is longer than <max> characters."
+  no-permission: "<lang:prefix><red>You are not allowed to rename collectors."
+  # Shown on the rename button so the reason is never a mystery.
+  reason:
+    none: "<yellow>Click to rename"
+    no-permission: "<red>You do not have permission to rename this"
 
 trust:
   prompt: "<lang:prefix><yellow>Type the player's name in chat, or <white>cancel</white> to stop."
@@ -75,13 +99,6 @@ trust:
   # <player>
   unknown-player: "<lang:prefix><red>No player called <player> could be found."
   owner-only: "<lang:prefix><red>Only the owner can change the trusted list."
-
-# Hologram lines, configured in config.yml under holograms.lines.
-# <owner> <items> <stored> <capacity> <earnings> <sold>
-hologram:
-  owner: "<gold><owner></gold><gray>'s Collector"
-  stored: "<gray><white><items></white> item(s) <dark_gray>| <gray><stored></gray><dark_gray>/<gray><capacity> slots"
-  earnings: "<gray>Earned <white><earnings>"
 
 update:
   # <current>, <latest>
@@ -144,112 +161,219 @@ filter:
     blacklist: "<red>blacklist"
 
 # Menu text. The layout of each menu lives in gui/, which references these keys.
-# Lore is split into separate keys on purpose: one short line each reads far better in game
-# than one long line the client wraps wherever it likes.
+#
+# Lore is one key per line on purpose: one short line each reads far better in game than one
+# long line the client wraps wherever it likes. Every lore follows the same shape, so the
+# menus read as one plugin rather than a pile of items:
+#
+#   a sentence or two saying what the item is for
+#   a blank line
+#   bullets with the numbers that matter
+#   a blank line
+#   one line per click, saying exactly what that click does
+#
+# Change 'bullet' and 'click' below to re-indent every lore in the plugin at once.
 gui:
+  # Prefix of a line stating a fact. The leading spaces are the indent.
+  bullet: "<dark_gray>  • "
+  # Prefix of a line a player can act on.
+  click: "<dark_gray>  ▸ "
+
+  # Placeholders every menu can use:
+  #   <name> the collector's name, <owner>, <trusted> how many players are trusted,
+  #   <earnings> money made by auto sell, <sold> items sold, <value> what the contents are
+  #   worth right now, <page> <pages> <next-page> <previous-page>,
+  #   <stored> slots in use, <capacity> slots unlocked, <free>, <items> items held.
+
   # Lore shown under a stored stack. <amount> is the real count, <stack-cap> the slot limit.
   stack:
-    amount: "<gray>Stored <white><amount></white> <dark_gray>of <gray><stack-cap>"
-    actions: "<dark_gray>Left take 64 <gray>| <dark_gray>Right take 1 <gray>| <dark_gray>Shift fill"
+    amount: "<lang:gui.bullet><gray>Stored <white><amount></white> <dark_gray>of <gray><stack-cap>"
+    take-stack: "<lang:gui.click><yellow>Left click <gray>take one stack"
+    take-one: "<lang:gui.click><yellow>Right click <gray>take a single item"
+    fill: "<lang:gui.click><yellow>Shift + left <gray>fill your inventory"
+    # Kept so a gui/ file written by 2.0.0-beta.1 still reads: this version's menus use the
+    # keys above instead. Delete your gui/ folder to take the new wording.
+    actions: "<lang:gui.stack.take-stack>"
+
   back:
     name: "<yellow>Back"
+    lore: "<lang:gui.click><yellow>Click <gray>return to the collector"
 
   collector:
-    title: "<dark_gray>Collector <gray>(<white><page></white>/<white><pages></white>)"
+    title: "<dark_gray><name>  <gray>(<white><page></white>/<white><pages></white>)"
     info:
       name: "<gradient:#ffd479:#ffa726>Collector</gradient>"
-      page: "<gray>Page <white><page></white> of <white><pages></white>"
-      slots: "<gray>Slots used <white><stored></white>/<white><capacity></white>"
-      items: "<gray>Items stored <white><items></white>"
+      lore-1: "<gray>Everything this collector has"
+      lore-2: "<gray>swept up off the ground."
+      owner: "<lang:gui.bullet><gray>Owner <white><owner>"
+      page: "<lang:gui.bullet><gray>Page <white><page></white> of <white><pages>"
+      slots: "<lang:gui.bullet><gray>Slots used <white><stored></white><dark_gray>/<gray><capacity>"
+      items: "<lang:gui.bullet><gray>Items held <white><items>"
+      trusted: "<lang:gui.bullet><gray>Trusted players <white><trusted>"
     next-page:
       name: "<yellow>Next page"
-      lore: "<gray>Go to page <white><next-page></white>"
+      lore: "<lang:gui.click><yellow>Click <gray>go to page <white><next-page>"
     previous-page:
       name: "<yellow>Previous page"
-      lore: "<gray>Go to page <white><previous-page></white>"
+      lore: "<lang:gui.click><yellow>Click <gray>go to page <white><previous-page>"
     locked-slot:
       name: "<dark_gray>Locked slot"
-      lore-1: "<gray>This slot is not unlocked yet."
-      lore-2: "<yellow>Buy more storage in Upgrades."
+      lore-1: "<gray>This slot is not paid for yet, so"
+      lore-2: "<gray>nothing can be stored in it."
+      hint: "<lang:gui.click><yellow>Buy more storage <gray>in Upgrades"
     sell:
       name: "<green>Sell Contents"
-      lore-1: "<gray>Sells everything in here that"
-      lore-2: "<gray>a shop or the price list will buy."
-      lore-3: "<yellow>Worth now: <white><value>"
+      lore-1: "<gray>Sells everything in here that a shop"
+      lore-2: "<gray>or the price list will buy. Anything"
+      lore-3: "<gray>without a price stays where it is."
+      value: "<lang:gui.bullet><gray>Worth now <white><value>"
+      earned: "<lang:gui.bullet><gray>Earned so far <white><earnings>"
+      hint: "<lang:gui.click><yellow>Click <gray>sell it all"
     pickup:
       name: "<aqua>Pick Up Collector"
-      lore-1: "<gray>Takes the collector back into"
-      lore-2: "<gray>your inventory. It has to be empty."
-      lore-3: "<gray>Holding <white><items></white> item(s)"
+      lore-1: "<gray>Takes the collector back into your"
+      lore-2: "<gray>inventory with its upgrades, settings"
+      lore-3: "<gray>and name. It has to be empty first."
+      items: "<lang:gui.bullet><gray>Holding <white><items></white> item(s)"
+      hint: "<lang:gui.click><yellow>Click <gray>pick it up"
     trust:
       name: "<light_purple>Trusted Players"
-      lore-1: "<gray>Let friends open this collector"
-      lore-2: "<gray>and move items in and out of it."
-      lore-3: "<gray>Trusted: <white><trusted>"
+      lore-1: "<gray>Let friends open this collector and"
+      lore-2: "<gray>move items in and out of it. Only you"
+      lore-3: "<gray>can change this list or pick it up."
+      count: "<lang:gui.bullet><gray>Trusted <white><trusted></white> player(s)"
+      hint: "<lang:gui.click><yellow>Click <gray>open the list"
     upgrades:
       name: "<aqua>Upgrades"
-      lore-1: "<gray>Sweep faster, reach further and"
-      lore-2: "<gray>hold more in every slot."
+      lore-1: "<gray>Sweep faster, reach further, and hold"
+      lore-2: "<gray>more in every slot."
+      hint: "<lang:gui.click><yellow>Click <gray>open upgrades"
     settings:
       name: "<gold>Settings"
-      lore-1: "<gray>Auto sell, auto smelt and the"
-      lore-2: "<gray>hologram above the collector."
+      lore-1: "<gray>Auto sell, auto smelt, the hologram"
+      lore-2: "<gray>above the block, and the name."
+      hint: "<lang:gui.click><yellow>Click <gray>open settings"
     filter:
       name: "<yellow>Filter"
       lore-1: "<gray>Choose exactly which items this"
       lore-2: "<gray>collector is allowed to pick up."
+      hint: "<lang:gui.click><yellow>Click <gray>open the filter"
 
   upgrades:
-    title: "<dark_gray>Collector Upgrades"
-    # One lore line each, so a menu file can leave any of them out.
-    # <level>, <max-level>, <value>, <next-value>, <cost>
-    level: "<gray>Level <white><level></white><dark_gray>/<gray><max-level>"
-    current: "<gray>Now <white><value>"
-    next: "<gray>After upgrading <white><next-value>"
-    buy: "<yellow>Click to buy for <white><cost>"
-    maxed: "<green>Fully upgraded"
-    reason: "<lang:upgrade.reason.none>"
+    title: "<dark_gray>Upgrades  <gray>(<white><name><gray>)"
+    # <level>, <max-level>, <value>, <next-value>, <cost>, <reason>
+    level: "<lang:gui.bullet><gray>Level <white><level></white><dark_gray>/<gray><max-level>"
+    current: "<lang:gui.bullet><gray>Now <white><value>"
+    next: "<lang:gui.bullet><gray>After upgrading <white><next-value>"
+    buy: "<lang:gui.click><yellow>Click <gray>upgrade for <white><cost>"
+    maxed: "<lang:gui.bullet><green>Fully upgraded"
+    # The reason the upgrade cannot be bought right now, from upgrade.reason above.
+    reason: "<reason>"
+    pickup-speed:
+      lore-1: "<gray>How often this collector sweeps the"
+      lore-2: "<gray>ground around it, in ticks."
+    pickup-range:
+      lore-1: "<gray>How far from the block items are"
+      lore-2: "<gray>pulled in from."
+    slot-capacity:
+      lore-1: "<gray>How many items one slot can hold."
+      lore-2: "<gray>Collectors count items, so this goes"
+      lore-3: "<gray>far past a vanilla stack of 64."
     locked:
       name: "<red>Locked"
-      lore: "<gray>This upgrade is not available to you."
+      lore-1: "<gray>This upgrade is not available to you"
+      lore-2: "<gray>on this collector."
+      # Kept for a gui/ file written by 2.0.0-beta.1.
+      lore: "<lang:gui.upgrades.locked.lore-1>"
     # The storage upgrade is bought as you go, so it has its own lines.
     # <level> slots now, <max-level> the most possible, <pages> pages unlocked,
     # <page-size> slots per page, <bulk> what a right click buys.
     slots:
-      lore-1: "<gray>Unlocked <white><level></white><dark_gray>/<gray><max-level> slots"
-      lore-2: "<gray>That is <white><pages></white> page(s) of <white><page-size></white>."
-      buy-one: "<yellow>Left click <gray>+1 slot <dark_gray>(<gray><cost-one><dark_gray>)"
-      buy-bulk: "<yellow>Right click <gray>+<bulk> slots <dark_gray>(<gray><cost-bulk><dark_gray>)"
-      buy-page: "<yellow>Shift + left <gray>+1 page <dark_gray>(<gray><cost-page><dark_gray>)"
+      lore-1: "<gray>How many slots this collector can"
+      lore-2: "<gray>store different items in."
+      unlocked: "<lang:gui.bullet><gray>Unlocked <white><level></white><dark_gray>/<gray><max-level> slots"
+      pages: "<lang:gui.bullet><gray>That is <white><pages></white> page(s) of <white><page-size>"
+      buy-one: "<lang:gui.click><yellow>Left click <gray>+1 slot <dark_gray>(<gray><cost-one><dark_gray>)"
+      buy-bulk: "<lang:gui.click><yellow>Right click <gray>+<bulk> slots <dark_gray>(<gray><cost-bulk><dark_gray>)"
+      buy-page: "<lang:gui.click><yellow>Shift + left <gray>+1 page <dark_gray>(<gray><cost-page><dark_gray>)"
+      buy-page-only: "<lang:gui.click><yellow>Click <gray>+1 page <dark_gray>(<gray><cost-page><dark_gray>)"
 
   settings:
-    title: "<dark_gray>Collector Settings"
-    state: "<gray>Currently <state>"
-    earnings: "<gray>Earned <white><earnings></white> from <white><sold></white> item(s)"
-    toggle: "<yellow>Click to toggle"
-    reason: "<lang:ability.reason.none>"
+    title: "<dark_gray>Settings  <gray>(<white><name><gray>)"
+    # <ability>, <state>, <reason>
+    state: "<lang:gui.bullet><gray>Currently <state>"
+    earnings: "<lang:gui.bullet><gray>Earned <white><earnings></white> from <white><sold></white> item(s)"
+    # The reason the setting cannot be changed right now, from ability.reason above.
+    reason: "<reason>"
+    auto-sell:
+      lore-1: "<gray>Sells items the moment they are"
+      lore-2: "<gray>picked up and pays you, instead of"
+      lore-3: "<gray>filling a slot with them."
+    auto-smelt:
+      lore-1: "<gray>Smelts what it picks up where there"
+      lore-2: "<gray>is a furnace recipe for it, so raw"
+      lore-3: "<gray>ore arrives as ingots."
+    hologram:
+      lore-1: "<gray>Floating text above the block"
+      lore-2: "<gray>showing what is inside."
+    rename:
+      name: "<light_purple>Rename Collector"
+      lore-1: "<gray>Gives this collector a name of its"
+      lore-2: "<gray>own, shown in its menus and on the"
+      lore-3: "<gray>hologram above the block."
+      current: "<lang:gui.bullet><gray>Called <white><name>"
+      # The reason it cannot be renamed right now, from rename.reason above.
+      hint: "<lang:gui.click><rename-reason>"
     locked:
       name: "<red>Locked"
-      lore: "<gray>This setting is not available to you."
+      lore-1: "<gray>This setting is not available to you"
+      lore-2: "<gray>on this collector."
+      # Kept for a gui/ file written by 2.0.0-beta.1.
+      lore: "<lang:gui.settings.locked.lore-1>"
+    # Kept for a gui/ file written by 2.0.0-beta.1.
+    toggle: "<lang:ability.reason.none>"
 
   filter:
-    title: "<dark_gray>Collector Filter"
+    title: "<dark_gray>Filter  <gray>(<white><name><gray>)"
     mode:
-      name: "<yellow>Filter mode"
-      lore: "<gray>Currently <mode> <dark_gray>(<gray><items> item(s)<dark_gray>)"
-      hint: "<yellow>Click to change"
+      name: "<yellow>Filter Mode"
+      lore-1: "<gray>off <dark_gray>- picks up everything"
+      lore-2: "<gray>whitelist <dark_gray>- only the items listed"
+      lore-3: "<gray>blacklist <dark_gray>- everything but those"
+      current: "<lang:gui.bullet><gray>Currently <mode> <dark_gray>(<gray><filtered> item(s)<dark_gray>)"
+      hint: "<lang:gui.click><yellow>Click <gray>switch mode"
+      # Kept for a gui/ file written by 2.0.0-beta.1.
+      lore: "<lang:gui.filter.mode.current>"
     help:
-      name: "<aqua>How this works"
-      lore: "<gray>Shift click an item in your inventory to add it, click one here to remove it."
+      name: "<aqua>How The Filter Works"
+      lore-1: "<gray>The items in this menu are the ones"
+      lore-2: "<gray>the mode above applies to."
+      add: "<lang:gui.click><yellow>Shift click an item <gray>in your"
+      add-2: "<dark_gray>    inventory to add it"
+      remove: "<lang:gui.click><yellow>Click one here <gray>to remove it"
+      # Kept for a gui/ file written by 2.0.0-beta.1.
+      lore: "<lang:gui.filter.help.lore-1>"
 
   trust:
-    title: "<dark_gray>Trusted Players"
+    title: "<dark_gray>Trusted Players  <gray>(<white><trusted><gray>)"
+    add:
+      name: "<green>Trust Someone"
+      lore-1: "<gray>Adds a player to this collector's"
+      lore-2: "<gray>trusted list. They can open it and"
+      lore-3: "<gray>move items, but not pick it up."
+      offline: "<lang:gui.bullet><gray>Players who have never joined work too"
+      hint: "<lang:gui.click><yellow>Click <gray>type a name in chat"
     entry:
+      # <player>
       name: "<white><player>"
       lore-1: "<gray>Can open this collector and move"
-      lore-2: "<red>Click to remove"
-    add:
-      name: "<green>Add a player"
-      lore-1: "<gray>Type a name in chat to let someone"
-      lore-2: "<gray>else use this collector."
-      lore-3: "<gray>Trusted: <white><trusted>"
+      lore-2: "<gray>items in and out of it."
+      hint: "<lang:gui.click><red>Click <gray>remove this player"
+
+# Hologram lines, configured in config.yml under holograms.lines.
+# <name> <owner> <items> <stored> <capacity> <earnings> <sold>
+hologram:
+  name: "<name>"
+  owner: "<gold><owner></gold><gray>'s Collector"
+  stored: "<gray><white><items></white> item(s) <dark_gray>| <gray><stored></gray><dark_gray>/<gray><capacity> slots"
+  earnings: "<gray>Earned <white><earnings>"

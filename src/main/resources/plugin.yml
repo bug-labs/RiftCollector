@@ -7,7 +7,10 @@ load: POSTWORLD
 
 authors: [ Samarth Sharma ]
 
-softdepend: [ Vault, ExcellentEconomy, CoinsEngine, ShopGUI+, EconomyShopGUI, zItemStacker ]
+# Plugin names as they appear in their own plugin.yml, which is not always the name on the
+# download page: ShopGUI+ calls itself ShopGUIPlus.
+softdepend: [ PlaceholderAPI, Vault, ExcellentEconomy, CoinsEngine, ShopGUIPlus, EconomyShopGUI,
+              EconomyShopGUI-Premium, zItemStacker ]
 
 libraries:
   - com.zaxxer:HikariCP:5.1.0
@@ -72,6 +75,9 @@ permissions:
     default: true
   riftcollector.sell:
     description: Allows selling a collector's contents from its menu.
+    default: true
+  riftcollector.rename:
+    description: Allows naming a collector from its Settings menu.
     default: true
   riftcollector.update-notify:
     description: Tells this player on join when a plugin update is available.

@@ -8,6 +8,7 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://jitpack.io")
     maven("https://repo.groupez.dev/releases")
+    maven("https://repo.extendedclip.com/releases/")
 }
 
 dependencies {
@@ -15,6 +16,7 @@ dependencies {
     // Provided at runtime through the 'libraries' block of plugin.yml.
     compileOnly("com.zaxxer:HikariCP:5.1.0")
     // Optional integrations, all soft dependencies at runtime.
+    compileOnly("me.clip:placeholderapi:2.12.3") { isTransitive = false }
     compileOnly("com.github.MilkBowl:VaultAPI:1.7") { isTransitive = false }
     compileOnly("com.github.brcdev-minecraft:shopgui-api:3.2.0") { isTransitive = false }
     compileOnly("com.github.Gypopo:EconomyShopGUI-API:1.11.0") { isTransitive = false }
@@ -29,6 +31,11 @@ java {
 }
 
 tasks {
+    withType<JavaCompile> {
+        // A deprecated API or an unchecked cast is a mistake to fix, not a line in the log.
+        options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror"))
+    }
+
     processResources {
         val props = mapOf("version" to version)
         filesMatching("plugin.yml") {

@@ -4,6 +4,7 @@ import me.iamsamarth.riftcollector.lang.Lang;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Player;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -26,7 +27,7 @@ public record MenuIcon(Material material,
 
     public enum Action {
         NONE, NEXT_PAGE, PREVIOUS_PAGE, CLOSE, OPEN_UPGRADES, OPEN_SETTINGS, OPEN_FILTER, OPEN_TRUST,
-        BACK, SELL_ALL, PICKUP, TRUST_ADD;
+        BACK, SELL_ALL, PICKUP, RENAME, TRUST_ADD;
 
         static Action parse(String raw, Logger logger) {
             Action action = read(raw, Action.class);
@@ -69,18 +70,18 @@ public record MenuIcon(Material material,
         }
     }
 
-    static @Nullable MenuIcon load(ConfigurationSection section, char character, Logger logger) {
+    static @Nullable MenuIcon load(ConfigurationSection section, String name, Logger logger) {
         String rawMaterial = section.getString("material");
         Material material = rawMaterial == null ? null : Material.matchMaterial(rawMaterial);
         if (material == null || material.isAir()) {
-            logger.warning("Menu item '" + character + "' has an unknown material '" + rawMaterial + "', skipping it.");
+            logger.warning("Menu item '" + name + "' has an unknown material '" + rawMaterial + "', skipping it.");
             return null;
         }
 
         String rawModel = section.getString("item-model");
         NamespacedKey itemModel = rawModel == null ? null : NamespacedKey.fromString(rawModel);
         if (rawModel != null && itemModel == null) {
-            logger.warning("Menu item '" + character + "' has an invalid item-model '" + rawModel + "', ignoring it.");
+            logger.warning("Menu item '" + name + "' has an invalid item-model '" + rawModel + "', ignoring it.");
         }
 
         return new MenuIcon(
@@ -106,19 +107,20 @@ public record MenuIcon(Material material,
         return condition.test(context) ? this : fallback;
     }
 
-    public ItemStack render(MenuContext context, Lang lang) {
-        return render(context, lang, TagResolver.empty());
-    }
-
-    /** The extra resolver lets a menu add placeholders only it knows, such as an upgrade level. */
-    public ItemStack render(MenuContext context, Lang lang, TagResolver extra) {
+    /**
+     * The extra resolver lets a menu add placeholders only it knows, such as an upgrade level,
+     * and {@code viewer} is who any other plugin's placeholders are filled in for.
+     */
+    public ItemStack render(MenuContext context, Lang lang, @Nullable Player viewer, TagResolver extra) {
         ItemStack stack = new ItemStack(material, amount);
         stack.editMeta(meta -> {
             if (name != null) {
-                meta.displayName(lang.parse(name, context.placeholders(), extra));
+                meta.displayName(lang.parse(viewer, name, context.placeholders(), extra));
             }
             if (!lore.isEmpty()) {
-                meta.lore(lore.stream().map(line -> lang.parse(line, context.placeholders(), extra)).toList());
+                meta.lore(lore.stream()
+                        .map(line -> lang.parse(viewer, line, context.placeholders(), extra))
+                        .toList());
             }
             if (hideTooltip) {
                 meta.setHideTooltip(true);

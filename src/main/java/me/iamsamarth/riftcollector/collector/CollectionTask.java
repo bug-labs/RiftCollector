@@ -135,15 +135,15 @@ public final class CollectionTask implements Runnable {
     }
 
     /**
-     * The block is gone (explosion, world edit, ...). The contents travel in the dropped
-     * collector, because a slot can hold far more items than it would be safe to drop.
+     * The block is gone (explosion, world edit, ...). The contents, upgrades and settings
+     * travel in the dropped collector, because a slot can hold far more items than it would be
+     * safe to drop and nobody should lose an upgraded collector to a creeper.
      */
     private void discard(Block block, Collector collector) {
         menus.closeFor(collector);
-        List<StoredStack> contents = collector.contents();
+        ItemStack dropped = collectorItem.create(collector);
         collectors.remove(collector);
-        block.getWorld().dropItemNaturally(block.getLocation().toCenterLocation(),
-                collectorItem.create(collector.material(), contents));
+        block.getWorld().dropItemNaturally(block.getLocation().toCenterLocation(), dropped);
     }
 
     private void reportStranded(Collector collector, int strandedSlots) {

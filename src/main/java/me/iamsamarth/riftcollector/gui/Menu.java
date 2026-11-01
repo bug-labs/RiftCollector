@@ -2,6 +2,7 @@ package me.iamsamarth.riftcollector.gui;
 
 import me.iamsamarth.riftcollector.ability.SellService;
 import me.iamsamarth.riftcollector.collector.Collector;
+import me.iamsamarth.riftcollector.collector.CollectorName;
 import me.iamsamarth.riftcollector.lang.Lang;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.Tag;
@@ -33,6 +34,9 @@ public abstract class Menu implements InventoryHolder {
 
     protected static final String BYPASS_PERMISSION = "riftcollector.bypass";
     protected static final String SELL_PERMISSION = "riftcollector.sell";
+    protected static final String RENAME_PERMISSION = "riftcollector.rename";
+    /** Typed instead of a name to go back to the plain "Collector". */
+    private static final String RESET_NAME = "reset";
 
     protected final Menus menus;
     protected final MenuServices services;
@@ -134,6 +138,7 @@ public abstract class Menu implements InventoryHolder {
             case BACK -> menus.openCollector(player, collector);
             case SELL_ALL -> sellAll(player);
             case PICKUP -> pickup(player);
+            case RENAME -> rename(player);
             default -> {
             }
         }
@@ -175,6 +180,41 @@ public abstract class Menu implements InventoryHolder {
         services.holograms().refresh(collector);
     }
 
+    /**
+     * Renaming goes through chat: a name is free text, and an anvil would mean holding the
+     * collector, which is exactly what a player with a full collector cannot do.
+     */
+    private void rename(Player player) {
+        if (!canUse(player)) {
+            lang.send(player, "ability.no-permission");
+            return;
+        }
+        if (!player.hasPermission(RENAME_PERMISSION)) {
+            lang.send(player, "rename.no-permission");
+            return;
+        }
+
+        int maxLength = services.names().maxLength();
+        player.closeInventory();
+        lang.send(player, "rename.prompt", Placeholder.unparsed("max", Integer.toString(maxLength)));
+        services.prompts().request(player, answer -> {
+            if (answer == null) {
+                lang.send(player, "rename.cancelled");
+            } else if (answer.equalsIgnoreCase(RESET_NAME)) {
+                collector.displayName(null);
+                lang.send(player, "rename.reset");
+            } else if (answer.length() > maxLength) {
+                lang.send(player, "rename.too-long", Placeholder.unparsed("max", Integer.toString(maxLength)));
+            } else {
+                collector.displayName(answer);
+                lang.send(player, "rename.renamed", Placeholder.unparsed("name", answer));
+            }
+            registry.refresh(collector);
+            services.holograms().refresh(collector);
+            reopen(player);
+        });
+    }
+
     private void pickup(Player player) {
         if (!canManage(player)) {
             lang.send(player, "collector.not-owner", Placeholder.unparsed("owner",
@@ -192,24 +232,29 @@ public abstract class Menu implements InventoryHolder {
 
         player.closeInventory();
         Block block = world.getBlockAt(collector.x(), collector.y(), collector.z());
+        ItemStack item = services.collectorItem().create(collector);
         services.collectors().remove(collector);
         if (block.getType() == collector.material()) {
             block.setType(Material.AIR);
         }
 
-        ItemStack item = services.collectorItem().create(1, collector.material());
         player.getInventory().addItem(item).values()
                 .forEach(rest -> world.dropItemNaturally(player.getLocation(), rest));
         lang.send(player, "collector.picked-up");
     }
 
+    /** Where a menu sends the player back after something took them out of it. */
+    protected void reopen(Player player) {
+        menus.openCollector(player, collector);
+    }
+
     protected void build() {
-        inventory = layout.create(this, context());
+        inventory = layout.create(this, context(), viewer, placeholders());
         render();
     }
 
     protected void render() {
-        layout.decorate(inventory, context(), placeholders());
+        layout.decorate(inventory, context(), viewer, placeholders());
         renderContents();
     }
 
@@ -217,9 +262,31 @@ public abstract class Menu implements InventoryHolder {
     protected void renderContents() {
     }
 
-    /** Placeholders available to every icon of this menu. */
+    /**
+     * Placeholders every icon of every menu can use. A menu adds its own on top rather than
+     * replacing these, so a line like "Trusted: &lt;trusted&gt;" works wherever it is put.
+     */
     protected TagResolver placeholders() {
-        return TagResolver.empty();
+        return TagResolver.resolver(
+                Placeholder.component("name", CollectorName.of(collector, lang, services.names())),
+                Placeholder.component("owner", collector.ownerName() == null
+                        ? lang.get("collector.unknown-owner")
+                        : Component.text(collector.ownerName())),
+                Placeholder.unparsed("trusted", Integer.toString(collector.trusted().size())),
+                Placeholder.unparsed("earnings", services.economy().format(collector.earnings())),
+                Placeholder.unparsed("sold", String.format(Locale.ROOT, "%,d", collector.itemsSold())),
+                Placeholder.component("rename-reason", renameReason()),
+                lazy("value", () -> services.economy().format(services.sales().value(collector))));
+    }
+
+    /** Says on the rename button why it cannot be used, rather than leaving it a mystery. */
+    private Component renameReason() {
+        if (viewer == null || !canUse(viewer)) {
+            return lang.get("ability.reason.not-trusted");
+        }
+        return viewer.hasPermission(RENAME_PERMISSION)
+                ? lang.get("rename.reason.none")
+                : lang.get("rename.reason.no-permission");
     }
 
     /**
